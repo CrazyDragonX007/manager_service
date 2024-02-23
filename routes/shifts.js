@@ -1,7 +1,7 @@
 const shift = require("../models/shift");
 const express = require("express")
 const router = express.Router();
-const {managerOrAdminAuth} = require("../utils/auth");
+const {managerOrAdminAuth, getEmailFromToken} = require("../utils/auth");
 const project = require("../models/project");
 const task = require("../models/task");
 
@@ -74,7 +74,39 @@ router.put("/edit",managerOrAdminAuth, (req, res) => {
     })
 })
 
-//TODO: Add get shifts route
-//TODO: Add delete shift route
+router.get("/all_shifts",managerOrAdminAuth, (req,res)=>{
+    shift.find({projectId: req.query.projectId}).then(shifts=>res.status(200).json(shifts)).catch(err=>{
+        res.status(400).json(err);
+        console.log(err);
+    });
+})
+
+router.get("/my_shifts",getEmailFromToken, (req,res)=>{
+    shift.find({assignedTo:req.user_email}).then(shifts=>res.status(200).json(shifts)).catch(err=>{
+        res.status(400).json(err);
+        console.log(err);
+    });
+})
+
+router.delete("/delete",managerOrAdminAuth, (req, res) => {
+    const {id} = req.body;
+    shift.findById(id).then(s=>{
+        if(s.startTime < Date.now()) return res.status(400).json({message: "Shift has already started and cannot be deleted."});
+        else{
+            if(s.assignedToTask) {
+                task.findByIdAndUpdate(assignedToTask, {$pull: {"shifts": id}}).catch(err => console.log(err));
+            }
+            project.findByIdAndUpdate(s.projectId,{$pull:{"shifts":id}}).catch(err=>console.log(err));
+            shift.findByIdAndDelete(id).then(shift => {
+                res.status(200).json({message: "Shift successfully deleted", shift})
+            }).catch(err => {
+                res.status(400).json({message: "Shift not successfully deleted", error: err.message});
+            });
+        }
+    }).catch(err=>{
+        console.log(err);
+        res.status(400).json({message: "Shift not successfully deleted", error: err.message});
+    });
+});
 
 module.exports = router;
