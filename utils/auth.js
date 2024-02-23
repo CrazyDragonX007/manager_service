@@ -70,3 +70,20 @@ const token = req.cookies.jwt
         return res.status(401).json({ message: "Not authorized, token not available" })
     }
 }
+
+exports.getEmailFromToken = (req, res, next) => {
+    const token = req.cookies.jwt
+    if (token) {
+        jwt.verify(token, jwt_secret, (err, decodedToken) => {
+            if (err) {
+                console.log(err)
+                return res.status(401).json({ message: "Not authorized" })
+            } else {
+                req.user_email = decodedToken.email;
+                next()
+            }
+        })
+    } else {
+        return res.status(401).json({ message: "Not authorized, token not available" })
+    }
+}

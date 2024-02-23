@@ -3,31 +3,32 @@ const express = require("express")
 const router = express.Router();
 const {adminAuth, managerOrAdminAuth} = require("../utils/auth");
 const task = require("../models/task");
+const section = require("../models/section");
 
 router.post("/create",adminAuth, (req, res) => {
-    const {title,description,createdBy,assignedManagers,assignedEmployees,sections} = req.body;
+    const {title,description,createdBy,assignedManagers,assignedEmployees} = req.body;
     project.create({
             title,
             description,
             createdBy,
             assignedManagers,
             assignedEmployees,
-            sections
-    }).then(project =>
-            res.status(200).json({message: "Project successfully created", project})
-    ).catch (err=>{
+    }).then(project => {
+        section.create({title:"To do",projectId:project._id}).catch(err=>console.log(err));
+        section.create({title:"Completed",projectId:project._id}).catch(err=>console.log(err));
+        res.status(200).json({message: "Project successfully created", project})
+    }).catch (err=>{
         res.status(401).json({message: "Project not successful created", error: err.message})
     })
 })
 
 router.put("/edit",adminAuth, (req, res) => {
-    const {id,title,description,assignedManagers,assignedEmployees, sections} = req.body;
+    const {id,title,description,assignedManagers,assignedEmployees} = req.body;
     project.findById(id).then(project=>{
         if(title) project.title = title;
         if(description) project.description = description;
         if(assignedManagers) project.assignedManagers = assignedManagers;
         if(assignedEmployees) project.assignedEmployees = assignedEmployees;
-        if(sections) project.sections = sections;
         project.save().then(project =>
             res.status(200).json({message: "Project successfully edited", project})
         ).catch (err=>{
