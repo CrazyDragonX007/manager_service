@@ -6,7 +6,7 @@ const {jwt_secret} = require("../utils/config");
 const {adminAuth, managerOrAdminAuth} = require("../utils/auth");
 const mailer = require("../utils/mailer");
 
-router.post("/register",adminAuth, (req, res) => {
+router.post("/register", (req, res) => {
     const { name, email, password, role } = req.body;
     if (password.length < 8) {
         return res.status(400).json({ message: "Password less than 8 characters" })
@@ -75,11 +75,10 @@ router.post("/login", (req, res) => {
                     {email, role: usr.role},
                     jwt_secret
                 );
-                res.cookie("jwt", token, {
-                    httpOnly: true,
-                });
                 res.status(200).json({
                     message: "User successfully logged in",
+                    token:token,
+                    user:usr
                 })
             }else{
                 return res.status(400).json({

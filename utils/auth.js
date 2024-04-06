@@ -3,7 +3,8 @@ const { jwt_secret } = require("./config")
 const project = require("../models/project")
 
 exports.adminAuth = (req, res, next) => {
-    const token = req.cookies.jwt
+    const authHeader = req.headers.authorization;
+    let token = authHeader.split(" ")[1];
     if (token) {
         jwt.verify(token, jwt_secret, (err, decodedToken) => {
             if (err) {
