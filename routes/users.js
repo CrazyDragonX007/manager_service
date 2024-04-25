@@ -1,9 +1,9 @@
-const User = require("../models/User")
+const User = require("../models/user")
 const express = require("express")
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const {jwt_secret} = require("../utils/config");
-const {adminAuth, managerOrAdminAuth} = require("../utils/auth");
+const {adminAuth} = require("../utils/auth");
 const mailer = require("../utils/mailer");
 
 router.post("/register", (req, res) => {
