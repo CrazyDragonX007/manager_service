@@ -7,28 +7,29 @@ const shift = require("../models/shift");
 const section = require("../models/section");
 
 router.post("/create",assignedToProject,async  (req, res) => {
-    const {title,description,createdBy,assignedToName, projectId} = req.body;
-    const assignedTo = [{name:assignedToName,time:Date.now()}];
-    const sectionHistory = [{section:"To do",assignedBy:createdBy,changedOn:Date.now()}];
-    const currentSection = await section.findOne({projectId:projectId,title:"To do"}).then(s=>s._id).catch(err=>console.log(err));
+    const {title,description,createdBy,assignedTo, projectId, currentSection} = req.body;
+    const assignedToHistory = [{name:assignedTo,time:Date.now()}];
     task.create({
             title,
             description,
             createdBy,
             assignedTo,
+            assignedToHistory,
             projectId,
-            sectionHistory,
             currentSection
     }).then(t =>{
         project.findById(projectId).then(project => {
             project.tasks.push(t._id);
             project.save().then(() => {
-                section.findOne({projectId:projectId,title:"To do"}).then(s=>{
+                section.findById(currentSection).then(s=>{
+                    t.sectionHistory = [{section: s.title, assignedBy: createdBy, changedOn: Date.now()}];
                     console.log(s);
-                    s.tasks.push(t._id);
+                    s.tasks.push(t._id.toString());
                     s.save().catch(err=>console.log(err));
+                    t.save();
+                    res.status(200).json({message: "Task successfully created", task: t})
                 }).catch(err=>console.log(err));
-                res.status(200).json({message: "Task successfully created", task: t})
+
             }).catch(err => {
                 console.log(err);
                 task.findByIdAndDelete(t._id);
@@ -48,12 +49,12 @@ router.post("/create",assignedToProject,async  (req, res) => {
 })
 
 router.put("/edit",assignedToProject, (req, res) => {
-    const {id,title,description} = req.body;
-    task.findById(id).then(task=>{
+    const {_id,title,description} = req.body;
+    task.findById(_id).then(task=>{
         if(title) task.title = title;
         if(description) task.description = description;
         task.save().then(task =>
-            res.status(200).json({message: "Task successfully edited", task})
+            res.status(200).json(task)
         ).catch (err=>{
             res.status(400).json({message: "Task not successful edited", error: err.message,})
         })
@@ -66,7 +67,15 @@ router.put("/edit",assignedToProject, (req, res) => {
 router.get("/all_tasks",assignedToProject, (req,res)=>{
     const {projectId} = req.query;
     if(projectId) {
-        task.find({projectId:projectId}).then(tasks => res.status(200).json(tasks)).catch(err => {
+        task.find({projectId:projectId}).then(tasks =>
+        {
+            section.find({projectId:projectId}).then(sections=>{
+                sections.forEach(s=>{
+                    s.tasks = s.tasks?.map(t => tasks.find(task => task._id.toString() === t?.toString()));
+                })
+                res.status(200).json(sections)
+            }).catch(err=>console.log(err))
+        }).catch(err => {
             console.log(err);
             res.status(400).json(err)
         });
@@ -78,7 +87,8 @@ router.get("/all_tasks",assignedToProject, (req,res)=>{
 router.post("/assign",assignedToProject, (req, res) => {
     const {id,newAssign} = req.body;
     task.findById(id).then(task=>{
-        task.assignedTo.push({name:newAssign,time:Date.now()});
+        task.assignedToHistory.push({name:newAssign,time:Date.now()});
+        task.assignedTo = newAssign;
         task.save().then(task =>
             res.status(200).json({message: "Task successfully assigned", task})
         ).catch (err=>{
@@ -93,14 +103,22 @@ router.post("/assign",assignedToProject, (req, res) => {
 router.put("/change_section",assignedToProject, (req, res) => {
     const {id,newSection,changedBy} = req.body;
     task.findById(id).then(t=>{
-        section.findByIdAndUpdate(t.currentSection,{$pull:{"tasks":id}}).catch(err=>console.log(err));
-        section.findById(newSection).then(s=>{
-            s.tasks.push(id);
+        section.findById(t.currentSection).then(s=>{
+            console.log(s.tasks)
+            console.log(id)
+            const index = s.tasks.indexOf(id);
+            s.tasks.splice(index,1);
+            console.log(s.tasks)
             s.save().catch(err=>console.log(err));
+        }).catch(err=>console.log(err));
+        section.findById(newSection).then(s=>{
+            s.tasks.push(id.toString());
+            s.save().catch(err=>console.log(err));
+            oldSection = t.currentSection;
             t.currentSection = newSection;
             t.sectionHistory.push({section:s.title,assignedBy:changedBy,changedOn:Date.now()});
             t.save().then(task =>
-                res.status(200).json({message: "Successfully changed section", task})
+                res.status(200).json({message: "Successfully changed section", change:{oldSection:oldSection,newSection:newSection,task:task}})
             ).catch (err=>{
                 res.status(400).json({message: "Unable to change section", error: err.message,})
             })
@@ -112,7 +130,7 @@ router.put("/change_section",assignedToProject, (req, res) => {
 
 // TODO: If comment functionality is added, revise this API
 router.delete("/delete",managerOrAdminAuth, (req, res) => {
-    const {id} = req.body;
+    const {id} = req.query;
     task.findByIdAndDelete(id).then(t => {
         t.shifts.forEach(s => {
             shift.findById(s).then(s => {

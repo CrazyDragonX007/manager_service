@@ -6,13 +6,15 @@ const task = require("../models/task");
 const section = require("../models/section");
 
 router.post("/create",adminAuth, (req, res) => {
-    const {title,description,createdBy,assignedManagers,assignedEmployees} = req.body;
+    const {title,description,createdBy,assignedManagers,assignedEmployees,teamId} = req.body;
+    console.log(req.body);
     project.create({
             title,
             description,
             createdBy,
             assignedManagers,
             assignedEmployees,
+            teamId
     }).then(project => {
         section.create({title:"To do",projectId:project._id}).catch(err=>console.log(err));
         section.create({title:"Completed",projectId:project._id}).catch(err=>console.log(err));
@@ -23,12 +25,10 @@ router.post("/create",adminAuth, (req, res) => {
 })
 
 router.put("/edit",adminAuth, (req, res) => {
-    const {id,title,description,assignedManagers,assignedEmployees} = req.body;
+    const {id,title,description} = req.body;
     project.findById(id).then(project=>{
         if(title) project.title = title;
         if(description) project.description = description;
-        if(assignedManagers) project.assignedManagers = assignedManagers;
-        if(assignedEmployees) project.assignedEmployees = assignedEmployees;
         project.save().then(project =>
             res.status(200).json({message: "Project successfully edited", project})
         ).catch (err=>{
@@ -67,20 +67,21 @@ router.put("/edit_managers",adminAuth, (req, res) => {
     })
 })
 
-router.get("/all_projects",managerOrAdminAuth, (req,res)=>{
-    project.find({}).then(projects=>res.status(200).json(projects)).catch(err=>res.status(400).json(err));
+router.get("/all_projects", (req,res)=>{
+    const {teamId} = req.query;
+    project.find({teamId: teamId}).then(projects=>res.status(200).json(projects)).catch(err=>res.status(400).json(err));
 })
 
 router.delete("/delete",adminAuth, (req, res) => {
-    const {id} = req.body;
+    const {id} = req.query;
     project.findByIdAndDelete(id).then(project => {
         console.log(project);
         try {
-            tasks = project.tasks;
+            const tasks = project.tasks;
             tasks.forEach(t => {
-                task.findByIdAndDelete(t).then(t=>console.log(t)).catch(err=>console.log(err));
+                task.findByIdAndDelete(t).then(t => console.log(t)).catch(err => console.log(err));
             });
-        }catch (err){
+        } catch (err) {
             console.log(err);
         }
         res.status(200).json({message: "Project successfully deleted", project})

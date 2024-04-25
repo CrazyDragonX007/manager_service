@@ -4,9 +4,10 @@ const section = require("../models/section");
 const {managerOrAdminAuth} = require("../utils/auth");
 
 router.post("/create",managerOrAdminAuth, (req, res) => {
-    const {title,projectId} = req.body;
-    section.create({title,projectId}).then(s =>{
-        res.status(200).json({message: "Section successfully created", section: s})
+    const {sectionTitle,projectId} = req.body;
+    section.create({title:sectionTitle,projectId}).then(s =>{
+        s.tasks = [];
+        res.status(200).json(s)
     }).catch(err=>{
         res.status(400).json({message: "Section not successfully created", error: err.message});
     })
@@ -19,7 +20,7 @@ router.put("/edit",managerOrAdminAuth, (req, res) => {
     section.findById(id).then(s=>{
         s.title = title;
         s.save().then(s =>
-            res.status(200).json({message: "Section successfully edited", section: s})
+            res.status(200).json({message: "Section successfully edited", newTitle: title,_id:id})
         ).catch (err=>{
             res.status(400).json({message: "Section not successful edited", error: err.message,})
         })
@@ -40,12 +41,12 @@ router.get("/all_sections", (req,res)=>{
     }
 });
 
-router.delete("/delete",managerOrAdminAuth, (req, res) => {
+router.post("/delete",managerOrAdminAuth, (req, res) => {
     const {id} = req.body;
     section.findById(id).then(s=>{
-        if(s.tasks.length > 0) return res.status(400).json({message: "Kindly reassign tasks in this section before deleting"});
+        // if(s.tasks.length > 0) return res.status(400).json({message: "Kindly reassign tasks in this section before deleting"});
         section.findByIdAndDelete(id).then(s => {
-            res.status(200).json({message: "Section successfully deleted", section: s})
+            res.status(200).json(s)
         }).catch(err => {
             res.status(400).json({message: "Section could not be deleted", error: err.message})
         });

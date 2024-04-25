@@ -3,14 +3,14 @@ const { jwt_secret } = require("./config")
 const project = require("../models/project")
 
 exports.adminAuth = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    let token = authHeader.split(" ")[1];
+    const token = req.headers.authorization;
     if (token) {
         jwt.verify(token, jwt_secret, (err, decodedToken) => {
             if (err) {
                 console.log(err)
                 return res.status(401).json({ message: "Not authorized" })
             } else {
+                console.log(decodedToken)
                 if (decodedToken.role !== "Admin") {
                     return res.status(401).json({ message: "Not authorized" })
                 } else {
@@ -26,7 +26,9 @@ exports.adminAuth = (req, res, next) => {
 }
 
 exports.managerOrAdminAuth = (req, res, next) => {
-    const token = req.cookies.jwt
+    const token = req.headers.authorization;
+    // let token = authHeader.split(" ")[1];
+    // console.log(authHeader);
     if (token) {
         jwt.verify(token, jwt_secret, (err, decodedToken) => {
             if (err) {
@@ -34,7 +36,6 @@ exports.managerOrAdminAuth = (req, res, next) => {
                 return res.status(401).json({ message: "Not authorized" })
             } else {
                 if (decodedToken.role !== "Admin" && decodedToken.role !== "Manager") {
-                    console.log(decodedToken.role)
                     return res.status(401).json({ message: "Not authorized" })
                 } else {
                     next()
@@ -47,7 +48,7 @@ exports.managerOrAdminAuth = (req, res, next) => {
 }
 
 exports.assignedToProject = (req, res, next) => {
-const token = req.cookies.jwt
+const token = req.headers.authorization;
     if (token) {
         jwt.verify(token, jwt_secret, (err, decodedToken) => {
             if (err) {

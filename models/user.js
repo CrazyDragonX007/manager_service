@@ -19,7 +19,8 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: "Employee",
         required: true,
-    }
+    },
+    teamId:{type:Number,required:true}
 });
 
 UserSchema.pre("save", function(next) {

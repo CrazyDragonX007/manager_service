@@ -5,10 +5,11 @@ const projectSchema = new mongoose.Schema({
     description:{type: String},
     createdBy: {type: String, required: true},
     createdOn: {type: Date, default: Date.now},
-    assignedManagers: {type: [String], required: true}, // user's email goes here
-    assignedEmployees: {type: [String], required: true,default:[]}, // user's email goes here
+    assignedManagers: {type: [{}], required: true,default:[]},
+    assignedEmployees: {type: [{}], required: true,default:[]},
     tasks:{type:[String],default:[],required:true},
-    shifts:{type:[String],default:[],required:true}
+    shifts:{type:[String],default:[],required:true},
+    teamId:{type:Number,required:true}
 })
 
 module.exports = mongoose.model('project',projectSchema);

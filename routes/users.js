@@ -7,15 +7,16 @@ const {adminAuth, managerOrAdminAuth} = require("../utils/auth");
 const mailer = require("../utils/mailer");
 
 router.post("/register", (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
     if (password.length < 8) {
         return res.status(400).json({ message: "Password less than 8 characters" })
     }
+    const teamId = Math.floor(Math.random() * 1000000);
     User.create({
         name,
         email,
         password,
-        role
+        teamId
     }).then(user => {
         res.status(200).json({
             message: "User successfully created",
@@ -33,13 +34,70 @@ router.post("/register", (req, res) => {
     })
 });
 
-//TODO: Revisit after making frontend
+router.put('/edit', (req, res) => {
+  const {name,id} = req.body;
+  User.findById(id).then(user=>{
+        user.name = name;
+        user.save().then(user =>
+            res.status(200).json({message: "Name successfully changed", user})
+        ).catch (err=>{
+            res.status(400).json({message: "Name not successful changed", error: err.message,})
+        });
+  });
+});
+
+router.put('/change_password', (req, res) => {
+  const {password,id} = req.body;
+    User.findById(id).then(user=>{
+            user.password = password;
+            user.save().then(user =>
+                res.status(200).json({message: "Password successfully changed", user})
+            ).catch (err=>{
+                res.status(400).json({message: "Password not successful changed", error: err.message,})
+            });
+    }).catch(err=>{
+        res.status(400).json({message: "User not found", error: err.message});
+    })
+})
+
+router.post("/invite-register", (req, res) => {
+    const {name,password,token,email} = req.body;
+    jwt.verify(token,jwt_secret,(err,decodedToken)=>{
+        if(err){
+            return res.status(400).json({message:"Invalid token"});
+        }
+        const {role,teamId} = decodedToken;
+        console.log(name);
+        User.create({
+            name,
+            password,
+            email,
+            role,
+            teamId
+        }).then(user => {
+            res.status(200).json({
+                message: "User successfully created",
+                user,
+            })
+            const subject = "Welcome to AIM";
+            const body = "You have been successfully added to a team on AIM. Kindly login to proceed.";
+            mailer(email, subject, body).then(r =>console.log(r)).catch(err=>console.log(err));
+        }).catch (err=>{
+            res.status(401).json({
+                message: "User not successful created",
+                error: err.message,
+            })
+        })
+    })
+})
+
+//TODO: Revisit after hosting frontend
 router.post("/invite",adminAuth, (req, res) => {
     const {invites} = req.body;
     const failed = [];
     invites.forEach(invite=>{
-        const {email,role} = invite;
-        const token = jwt.sign({email,role}, jwt_secret);
+        const {email,role,teamId} = invite;
+        const token = jwt.sign({email,role,teamId}, jwt_secret);
         const subject = "Invitation to join the team";
         const body = `You have been invited to join the team as a ${role}. Please click on the link to register: http://localhost:3000/invite/${token}`;
         const mail_sent = mailer(email,subject,body);
@@ -73,7 +131,9 @@ router.post("/login", (req, res) => {
             if(isMatch){
                 const token = jwt.sign(
                     {email, role: usr.role},
-                    jwt_secret
+                    jwt_secret,{
+                        expiresIn:"24h"
+                    }
                 );
                 res.status(200).json({
                     message: "User successfully logged in",
@@ -89,14 +149,16 @@ router.post("/login", (req, res) => {
     });
 });
 
-router.get("/all_users",adminAuth, (req, res) => {
-    User.find({}).then(users => {
+router.get("/all_users", (req, res) => {
+    const teamId = req.query.teamId;
+    User.find({teamId:teamId}).then(users => {
         res.status(200).json(users)
     })
 });
 
-router.get("/all_employees",managerOrAdminAuth, (req, res) => {
-    User.find({ role: "Employee" }).then(users => {
+router.get("/all_employees", (req, res) => {
+    const teamId = req.query.teamId;
+    User.find({ role: "Employee",teamId: teamId }).then(users => {
         res.status(200).json(users)
     })
 });
@@ -104,6 +166,29 @@ router.get("/all_employees",managerOrAdminAuth, (req, res) => {
 router.get("/logout", (req, res) => {
     res.cookie("jwt", "", { maxAge: "1" })
     res.status(200).json({ message: "User successfully logged out" });
+});
+
+router.put("/change_role",adminAuth, (req, res) => {
+    const {userId,role} = req.body;
+    User.findById(userId).then(user=>{
+        user.role = role;
+        user.save().then(user =>
+            res.status(200).json({message: "Role successfully changed", user})
+        ).catch (err=>{
+            res.status(400).json({message: "Role not successful changed", error: err.message,})
+        })
+    }).catch(err=>{
+        res.status(400).json({message: "User not found", error: err.message,});
+    })
+})
+
+router.post("/delete",adminAuth, (req, res) => {
+    const {userId} = req.body;
+    User.findByIdAndDelete(userId).then(user => {
+        res.status(200).json({message: "User successfully deleted", user})
+    }).catch(err=>{
+        res.status(400).json({message: "User not successfully deleted", error: err.message});
+    });
 });
 
 module.exports = router

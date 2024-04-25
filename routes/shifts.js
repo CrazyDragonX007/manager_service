@@ -6,7 +6,7 @@ const project = require("../models/project");
 const task = require("../models/task");
 
 router.post("/create",managerOrAdminAuth, (req, res) => {
-    const {title,description,startTime,endTime,date,location,createdBy,assignedTo,projectId,assignedToTask} = req.body;
+    const {title,description,start,end,date,location,createdBy,assignedTo,projectId,assignedToTask} = req.body;
     shift.create({
             title,
             description,
@@ -14,8 +14,8 @@ router.post("/create",managerOrAdminAuth, (req, res) => {
             assignedTo,
             projectId,
             date,
-            startTime,
-            endTime,
+            start,
+            end,
             location,
             assignedToTask
     }).then(stf =>{
@@ -55,13 +55,13 @@ router.put("/change_task",managerOrAdminAuth, (req, res) => {
 });
 
 router.put("/edit",managerOrAdminAuth, (req, res) => {
-    const {id,title,description,startTime,endTime,date,location,assignedTo,projectTitle} = req.body;
+    const {id,title,description,start,end,date,location,assignedTo,projectTitle} = req.body;
     shift.findById(id).then(s=>{
-        if(s.startTime < Date.now()) return res.status(400).json({message: "Shift has already started"});
+        if(s.start < Date.now()) return res.status(400).json({message: "Shift has already started"});
         if(title) s.title = title;
         if(description) s.description = description;
-        if(startTime) s.startTime = startTime;
-        if(endTime) s.endTime = endTime;
+        if(start) s.start = start;
+        if(end) s.end = end;
         if(date) s.date = date;
         if(location) s.location = location;
         if(assignedTo) s.assignedTo = assignedTo;
@@ -75,7 +75,9 @@ router.put("/edit",managerOrAdminAuth, (req, res) => {
 })
 
 router.get("/all_shifts",managerOrAdminAuth, (req,res)=>{
-    shift.find({projectId: req.query.projectId}).then(shifts=>res.status(200).json(shifts)).catch(err=>{
+    shift.find({projectId: req.query.projectId}).then(shifts=>{
+        res.status(200).json(shifts)
+    }).catch(err=>{
         res.status(400).json(err);
         console.log(err);
     });
