@@ -130,12 +130,7 @@ router.post("/login", (req, res) => {
         usr.comparePassword(password,(err,isMatch)=>{
             if(err){console.log(err)}
             if(isMatch){
-                const token = jwt.sign(
-                    {email, role: usr.role},
-                    jwt_secret,{
-                        expiresIn:"24h"
-                    }
-                );
+                const token = jwt.sign({email, role: usr.role}, jwt_secret);
                 res.status(200).json({
                     message: "User successfully logged in",
                     token:token,
