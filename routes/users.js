@@ -7,7 +7,7 @@ const {adminAuth} = require("../utils/auth");
 const mailer = require("../utils/mailer");
 
 router.post("/register", (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     if (password.length < 8) {
         return res.status(400).json({ message: "Password less than 8 characters" })
     }
@@ -16,6 +16,7 @@ router.post("/register", (req, res) => {
         name,
         email,
         password,
+        role,
         teamId
     }).then(user => {
         res.status(200).json({
