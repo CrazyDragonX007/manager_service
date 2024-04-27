@@ -84,6 +84,16 @@ router.get("/all_tasks",assignedToProject, (req,res)=>{
     }
 });
 
+router.get("/project_tasks",(req,res)=>{
+    const {projectId} = req.query;
+    task.find({projectId:projectId}).then(tasks => {
+        res.status(200).json(tasks);
+    }).catch(err => {
+        console.log(err);
+        res.status(400).json(err);
+    });
+})
+
 router.post("/assign",assignedToProject, (req, res) => {
     const {id,newAssign} = req.body;
     task.findById(id).then(task=>{
