@@ -5,6 +5,8 @@ const router = express.Router();
 const {managerOrAdminAuth, assignedToProject} = require("../utils/auth");
 const shift = require("../models/shift");
 const section = require("../models/section");
+const User = require("../models/user");
+const mailer = require("../utils/mailer");
 
 router.post("/create",assignedToProject,async  (req, res) => {
     const {title,description,createdBy,assignedTo, projectId, currentSection} = req.body;
@@ -23,13 +25,16 @@ router.post("/create",assignedToProject,async  (req, res) => {
             project.save().then(() => {
                 section.findById(currentSection).then(s=>{
                     t.sectionHistory = [{section: s.title, assignedBy: createdBy, changedOn: Date.now()}];
-                    console.log(s);
                     s.tasks.push(t._id.toString());
                     s.save().catch(err=>console.log(err));
                     t.save();
                     res.status(200).json({message: "Task successfully created", task: t})
+                    User.findById(assignedTo).then(user=>{
+                        const subject = "Task Assigned";
+                        const body = `Hi ${user.name},\n\n You have been assigned a task by ${createdBy}. Kindly login to view details.\n\n Sincerely,\n Team AIM`;
+                        mailer(user.email, subject, body).then(r =>console.log(r)).catch(err=>console.log(err));
+                    });
                 }).catch(err=>console.log(err));
-
             }).catch(err => {
                 console.log(err);
                 task.findByIdAndDelete(t._id);
@@ -97,6 +102,11 @@ router.get("/project_tasks",(req,res)=>{
 router.post("/assign",assignedToProject, (req, res) => {
     const {id,newAssign} = req.body;
     task.findById(id).then(task=>{
+        User.findById(newAssign).then(user=>{
+            const subject = "Task Assigned";
+            const body = `Hi ${user.name},\n\n You have been assigned a task named ${task.title}. Kindly login to view details.\n\n Sincerely,\n Team AIM`;
+            mailer(user.email, subject, body).then(r =>console.log(r)).catch(err=>console.log(err));
+        });
         task.assignedToHistory.push({name:newAssign,time:Date.now()});
         task.assignedTo = newAssign;
         task.save().then(task =>
@@ -114,11 +124,8 @@ router.put("/change_section",assignedToProject, (req, res) => {
     const {id,newSection,changedBy} = req.body;
     task.findById(id).then(t=>{
         section.findById(t.currentSection).then(s=>{
-            console.log(s.tasks)
-            console.log(id)
             const index = s.tasks.indexOf(id);
             s.tasks.splice(index,1);
-            console.log(s.tasks)
             s.save().catch(err=>console.log(err));
         }).catch(err=>console.log(err));
         section.findById(newSection).then(s=>{
