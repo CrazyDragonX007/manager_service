@@ -93,7 +93,7 @@ router.get("/my_shifts",getEmailFromToken, (req,res)=>{
 router.delete("/delete",managerOrAdminAuth, (req, res) => {
     const {id} = req.query;
     shift.findById(id).then(s=>{
-        if(s.startTime < Date.now()) return res.status(400).json({message: "Shift has already started and cannot be deleted."});
+        if(s.start < Date.now()) return res.status(400).json({message: "Shift has already started and cannot be deleted."});
         else{
             if(s.assignedToTask) {
                 task.findByIdAndUpdate(assignedToTask, {$pull: {"shifts": id}}).catch(err => console.log(err));
