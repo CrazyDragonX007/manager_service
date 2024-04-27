@@ -6,5 +6,6 @@ module.exports = {
     port: process.env.PORT,
     jwt_secret: process.env.JWT_SECRET,
     mail_username: process.env.MAIL_USERNAME,
-    mail_password: process.env.MAIL_PASSWORD
+    mail_password: process.env.MAIL_PASSWORD,
+    frontend_url: process.env.FRONTEND_URL
 }

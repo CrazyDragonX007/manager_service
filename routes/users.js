@@ -2,7 +2,7 @@ const User = require("../models/user")
 const express = require("express")
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const {jwt_secret} = require("../utils/config");
+const {jwt_secret,frontend_url} = require("../utils/config");
 const {adminAuth} = require("../utils/auth");
 const mailer = require("../utils/mailer");
 
@@ -92,7 +92,6 @@ router.post("/invite-register", (req, res) => {
     })
 })
 
-//TODO: Revisit after hosting frontend
 router.post("/invite",adminAuth, (req, res) => {
     const {invites} = req.body;
     const failed = [];
@@ -100,7 +99,7 @@ router.post("/invite",adminAuth, (req, res) => {
         const {email,role,teamId} = invite;
         const token = jwt.sign({email,role,teamId}, jwt_secret);
         const subject = "Invitation to join the team";
-        const body = `You have been invited to join the team as a ${role}. Please click on the link to register: http://localhost:3000/invite/${token}`;
+        const body = `You have been invited to join the team as a ${role}. Please click on the link to register: ${frontend_url}/invite/${token}`;
         const mail_sent = mailer(email,subject,body);
         if(!mail_sent){
             failed.push(email);
@@ -121,7 +120,7 @@ router.post("/login", (req, res) => {
             message: "Email or Password not present",
         })
     }
-    const user = User.findOne({ email }).then(usr=>{
+    User.findOne({ email }).then(usr=>{
         if(!usr){
             return res.status(400).json({
                 message: "User not found",
