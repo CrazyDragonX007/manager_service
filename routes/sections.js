@@ -3,7 +3,7 @@ const router = express.Router();
 const section = require("../models/section");
 const {managerOrAdminAuth} = require("../utils/auth");
 
-router.post("/create",managerOrAdminAuth, (req, res) => {
+router.post("/create", (req, res) => {
     const {sectionTitle,projectId} = req.body;
     section.create({title:sectionTitle,projectId}).then(s =>{
         s.tasks = [];
@@ -13,7 +13,7 @@ router.post("/create",managerOrAdminAuth, (req, res) => {
     })
 });
 
-router.put("/edit",managerOrAdminAuth, (req, res) => {
+router.put("/edit", (req, res) => {
     const {id,title} = req.body;
     if(!title) return res.status(400).json({message: "No title provided"});
     if(!id) return res.status(400).json({message: "No id provided"});
@@ -41,7 +41,7 @@ router.get("/all_sections", (req,res)=>{
     }
 });
 
-router.post("/delete",managerOrAdminAuth, (req, res) => {
+router.post("/delete", (req, res) => {
     const {id} = req.body;
     section.findById(id).then(s=>{
         // if(s.tasks.length > 0) return res.status(400).json({message: "Kindly reassign tasks in this section before deleting"});
