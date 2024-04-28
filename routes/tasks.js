@@ -8,7 +8,7 @@ const section = require("../models/section");
 const User = require("../models/user");
 const mailer = require("../utils/mailer");
 
-router.post("/create",assignedToProject,async  (req, res) => {
+router.post("/create",async  (req, res) => {
     const {title,description,createdBy,assignedTo, projectId, currentSection} = req.body;
     const assignedToHistory = [{name:assignedTo,time:Date.now()}];
     task.create({
@@ -53,7 +53,7 @@ router.post("/create",assignedToProject,async  (req, res) => {
     })
 })
 
-router.put("/edit",assignedToProject, (req, res) => {
+router.put("/edit", (req, res) => {
     const {_id,title,description} = req.body;
     task.findById(_id).then(task=>{
         if(title) task.title = title;
@@ -69,7 +69,7 @@ router.put("/edit",assignedToProject, (req, res) => {
     })
 })
 
-router.get("/all_tasks",assignedToProject, (req,res)=>{
+router.get("/all_tasks", (req,res)=>{
     const {projectId} = req.query;
     if(projectId) {
         task.find({projectId:projectId}).then(tasks =>
@@ -99,7 +99,7 @@ router.get("/project_tasks",(req,res)=>{
     });
 })
 
-router.post("/assign",assignedToProject, (req, res) => {
+router.post("/assign", (req, res) => {
     const {id,newAssign} = req.body;
     task.findById(id).then(task=>{
         User.findById(newAssign).then(user=>{
@@ -120,7 +120,7 @@ router.post("/assign",assignedToProject, (req, res) => {
 });
 
 //TODO: Update time elapsed below.
-router.put("/change_section",assignedToProject, (req, res) => {
+router.put("/change_section", (req, res) => {
     const {id,newSection,changedBy} = req.body;
     task.findById(id).then(t=>{
         section.findById(t.currentSection).then(s=>{
@@ -146,7 +146,7 @@ router.put("/change_section",assignedToProject, (req, res) => {
 });
 
 // TODO: If comment functionality is added, revise this API
-router.delete("/delete",managerOrAdminAuth, (req, res) => {
+router.delete("/delete", (req, res) => {
     const {id} = req.query;
     task.findByIdAndDelete(id).then(t => {
         t.shifts.forEach(s => {

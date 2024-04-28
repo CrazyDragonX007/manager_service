@@ -7,7 +7,7 @@ const task = require("../models/task");
 const User = require("../models/user");
 const mailer = require("../utils/mailer");
 
-router.post("/create",managerOrAdminAuth, (req, res) => {
+router.post("/create", (req, res) => {
     const {title,description,start,end,date,location,createdBy,assignedTo,projectId,assignedToTask} = req.body;
     shift.create({
             title,
@@ -48,7 +48,7 @@ router.post("/create",managerOrAdminAuth, (req, res) => {
     })
 })
 
-router.put("/change_task",managerOrAdminAuth, (req, res) => {
+router.put("/change_task", (req, res) => {
     const {id, assignedToTask} = req.body;
     if(!assignedToTask) return res.status(400).json({message: "No task provided"});
     shift.findById(id).then(shift=>{
@@ -64,7 +64,7 @@ router.put("/change_task",managerOrAdminAuth, (req, res) => {
     })
 });
 
-router.put("/edit",managerOrAdminAuth, (req, res) => {
+router.put("/edit", (req, res) => {
     const {id,title,description,start,end,date,location,assignedTo,projectTitle} = req.body;
     shift.findById(id).then(s=>{
         if(s.start < Date.now()) return res.status(400).json({message: "Shift has already started"});
@@ -100,7 +100,7 @@ router.put("/edit",managerOrAdminAuth, (req, res) => {
     })
 })
 
-router.get("/all_shifts",managerOrAdminAuth, (req,res)=>{
+router.get("/all_shifts", (req,res)=>{
     shift.find({projectId: req.query.projectId}).then(shifts=>{
         res.status(200).json(shifts)
     }).catch(err=>{
