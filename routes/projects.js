@@ -5,7 +5,7 @@ const {adminAuth, managerOrAdminAuth} = require("../utils/auth");
 const task = require("../models/task");
 const section = require("../models/section");
 
-router.post("/create",adminAuth, (req, res) => {
+router.post("/create", (req, res) => {
     const {title,description,createdBy,assignedManagers,assignedEmployees,teamId} = req.body;
     console.log(req.body);
     project.create({
@@ -24,7 +24,7 @@ router.post("/create",adminAuth, (req, res) => {
     })
 })
 
-router.put("/edit",adminAuth, (req, res) => {
+router.put("/edit", (req, res) => {
     const {id,title,description} = req.body;
     project.findById(id).then(project=>{
         if(title) project.title = title;
@@ -39,7 +39,7 @@ router.put("/edit",adminAuth, (req, res) => {
     })
 })
 
-router.put("/edit_employees",managerOrAdminAuth, (req, res) => {
+router.put("/edit_employees", (req, res) => {
     const {id,assignedEmployees} = req.body;
     project.findById(id).then(project=>{
         project.assignedEmployees = assignedEmployees;
@@ -53,7 +53,7 @@ router.put("/edit_employees",managerOrAdminAuth, (req, res) => {
     })
 })
 
-router.put("/edit_managers",adminAuth, (req, res) => {
+router.put("/edit_managers", (req, res) => {
     const {id, assignedManagers} = req.body;
     project.findById(id).then(project => {
         project.assignedManagers = assignedManagers;
@@ -72,7 +72,7 @@ router.get("/all_projects", (req,res)=>{
     project.find({teamId: teamId}).then(projects=>res.status(200).json(projects)).catch(err=>res.status(400).json(err));
 })
 
-router.delete("/delete",adminAuth, (req, res) => {
+router.delete("/delete", (req, res) => {
     const {id} = req.query;
     project.findByIdAndDelete(id).then(project => {
         console.log(project);

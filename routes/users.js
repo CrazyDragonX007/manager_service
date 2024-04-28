@@ -92,7 +92,7 @@ router.post("/invite-register", (req, res) => {
     })
 })
 
-router.post("/invite",adminAuth, (req, res) => {
+router.post("/invite", (req, res) => {
     const {invites} = req.body;
     const failed = [];
     invites.forEach(invite=>{
