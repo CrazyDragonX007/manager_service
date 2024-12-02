@@ -1,4 +1,5 @@
-const express = require("express")
+const express = require("express");
+const https = require("https");
 const cookieParser = require("cookie-parser");
 const logger = require('morgan');
 const cors = require('cors');
@@ -27,7 +28,8 @@ app.use('/shifts', shiftRouter);
 app.use('/sections',sectionRouter);
 app.use('/messages',messageRouter);
 
-const server = app.listen(port, () => console.log(`Server Connected`))
+// const server = app.listen(port, () => console.log(`Server Connected`))
+const server = https.createServer(app).listen(port, () => console.log(`Server Connected`))
 
 global.onlineUsers = new Map();
 
@@ -53,4 +55,4 @@ io.on("connection", (socket) => {
 process.on("unhandledRejection", err => {
     console.log(`An error occurred: ${err.message}`)
     server.close(() => process.exit(1))
-})
+});
