@@ -14,14 +14,22 @@ const taskRouter = require('./routes/tasks');
 const shiftRouter = require('./routes/shifts');
 const sectionRouter = require('./routes/sections');
 const messageRouter = require('./routes/messages');
+const bodyParser = require("body-parser");
+const {readFileSync} = require("node:fs");
 
 const corsOptions = {
     origin: frontend_url,
     optionsSuccessStatus: 200
 }
 
+let sslOptions = {
+    key: readFileSync('server-key.pem'),
+    cert: readFileSync('server-cert.pem')
+};
+
 const app = express()
-app.use(express.json())
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cookieParser())
 app.use(logger('dev'));
 app.use(cors(corsOptions));
@@ -36,8 +44,8 @@ app.use('/messages',messageRouter);
 app.use('/test', (req,res)=>res.send("Welcome to AIM API"));
 
 // const server = app.listen(port, () => console.log(`Server Connected`))
-const httpsServer = https.createServer(app).listen(443, () => console.log(`Server Connected`));
-// const httpServer = http.createServer(app).listen(port, () => console.log(`Server Connected`));
+const httpsServer = https.createServer(sslOptions,app).listen(443, () => console.log(`Server Connected`));
+http.createServer(app).listen(port, () => console.log(`Server Connected`));
 
 const server = httpsServer;
 
