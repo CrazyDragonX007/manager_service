@@ -44,8 +44,8 @@ app.use('/messages',messageRouter);
 app.use('/test', (req,res)=>res.send("Welcome to AIM API"));
 
 // const server = app.listen(port, () => console.log(`Server Connected`))
-const httpsServer = https.createServer(sslOptions,app).listen(443, () => console.log(`Server Connected`));
-http.createServer(app).listen(port, () => console.log(`Server Connected`));
+const httpsServer = https.createServer(sslOptions,app).listen(port, () => console.log(`Server Connected`));
+// http.createServer(app).listen(port, () => console.log(`Server Connected`));
 
 const server = httpsServer;
 
