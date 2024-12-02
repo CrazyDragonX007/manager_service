@@ -14,6 +14,11 @@ const shiftRouter = require('./routes/shifts');
 const sectionRouter = require('./routes/sections');
 const messageRouter = require('./routes/messages');
 
+const corsOptions = {
+    origin: frontend_url,
+    optionsSuccessStatus: 200
+}
+
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
