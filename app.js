@@ -1,5 +1,6 @@
 const express = require("express");
 const https = require("https");
+const http = require("http");
 const cookieParser = require("cookie-parser");
 const logger = require('morgan');
 const cors = require('cors');
@@ -23,7 +24,7 @@ const app = express()
 app.use(express.json())
 app.use(cookieParser())
 app.use(logger('dev'));
-app.use(cors());
+app.use(cors(corsOptions));
 db()
 
 app.use('/users', usersRouter);
@@ -32,9 +33,13 @@ app.use('/tasks', taskRouter);
 app.use('/shifts', shiftRouter);
 app.use('/sections',sectionRouter);
 app.use('/messages',messageRouter);
+app.use('/test', (req,res)=>res.send("Welcome to AIM API"));
 
 // const server = app.listen(port, () => console.log(`Server Connected`))
-const server = https.createServer(app).listen(port, () => console.log(`Server Connected`))
+const httpsServer = https.createServer(app).listen(port, () => console.log(`Server Connected`));
+// const httpServer = http.createServer(app).listen(port, () => console.log(`Server Connected`));
+
+const server = httpsServer;
 
 global.onlineUsers = new Map();
 
